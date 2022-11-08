@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.model_selection import  GridSearchCV, KFold, train_test_split
 from sklearn.metrics import  mean_absolute_error, mean_squared_error, r2_score
 
+import glob
 import joblib
 import json
 import logging
@@ -46,12 +47,10 @@ def save_model(model, hyperparameters, metrics, folder_for_files):
     joblib.dump(model, f'{folder_for_files}/model.joblib')
     with open(f'{folder_for_files}/hyperparameters.json', 'w') as outfile:
         json.dump(hyperparameters, outfile)
-    with open(f'{folder_for_files}\metrics.json', 'w') as outfile:
+    with open(f'{folder_for_files}/metrics.json', 'w') as outfile:
         json.dump(metrics, outfile)
 
 def split_the_data(features, labels, test_to_rest_ratio, validation_to_test_ratio):
-    X = features
-    y = labels
     #split the data into test and train data; the 0.3 describes the data which is apportioned to the test set 
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=test_to_rest_ratio, random_state=13)
     #print(y_train)
@@ -61,14 +60,7 @@ def split_the_data(features, labels, test_to_rest_ratio, validation_to_test_rati
     return [X_train, y_train, X_validation, y_validation, X_test, y_test]
 
 def get_baseline_score(regression_model, data_subsets, folder):
-    """Tunes the hyperparameters of a regression model and saves the information.
-    Args:
-        model (class): The regression model to be as a baseline.
-        data_subsets (list): List in the form [X_train, y_train, X_validation,
-            y_validation, X_test, y_test].
-        folder (str): The directory path of where to save the data.
-    Returns:
-        metrics (dict): Training, validation and testing performance metrics.
+    """
     """
     logging.info('Calculating baseline score...')
     #fit the data baes on labels and features from the train set
@@ -116,16 +108,15 @@ def tune_regression_model_hyperparameters(model, data_subsets, hyperparameters, 
     return best_params, metrics
     
 def evaluate_all_models(data_subsets):
-    """Tunes the hyperparameters of SGDRegressor, DecisionTreeRegressor, RandomForestRegressor
-        and XGBRegressor before saving the best model as a .joblib file, and
-        best hyperparameters and performance metrics as .json files.
+    """
     """
     
     tune_regression_model_hyperparameters(
         DecisionTreeRegressor,
         data_subsets,
         dict(max_depth=list(range(1, 10))),
-        '')
+        Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\decision_tree_regressor")
+        )
 
     tune_regression_model_hyperparameters(
         RandomForestRegressor,
@@ -135,7 +126,8 @@ def evaluate_all_models(data_subsets):
             max_depth=list(range(1, 10)),
             bootstrap=[True, False],
             max_samples = list(range(40, 50))),
-        '')
+        Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\random_forest_regressor")
+        )
 
     tune_regression_model_hyperparameters(
         xgb.XGBRegressor,
@@ -146,19 +138,43 @@ def evaluate_all_models(data_subsets):
             min_child_weight=list(range(1, 5)),
             gamma=list(range(1, 3)),
             learning_rate=np.arange(0.1, 0.5, 0.1)),
-        ''
+        Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\xgboost_regressor")
     )
 
+def find_best_model():
+    """
+    """
+    logging.info('Finding best model...')
 
+    paths = glob.glob(r'models/regression/*/metrics.json')
+    rmse = {}
+    for path in paths:
+        #print(path)
+        model = path[18:-13]
+        #print(f'model is {model}')
+        with open(path) as file:
+            metrics = json.load(file)
+        rmse[model] = metrics["validation_rmse_pred"]
+
+    best_model_name = min(rmse, key=rmse.get)
+    #print(f'best_model_name: {best_model_name}')
+    best_model = joblib.load(f'models/regression/{best_model_name}/model.joblib')
+    with open(f'models/regression/{best_model_name}/hyperparameters.json', 'rb') as file:
+            best_hyperparameters = json.load(file)
+    with open(f'models/regression/{best_model_name}/metrics.json', 'rb') as file:
+            best_metrics = json.load(file)
+    return best_model, best_hyperparameters, best_metrics
 
 
 if __name__ == "__main__":
-    df = pd.read_csv(Path('AirbnbDataSci/tabular_data/AirBnbData.csv'))
-    df_2 = td.clean_tabular_data(df)
-    features, labels = td.load_airbnb(df_2, "Price_Night")  
-    split_data = split_the_data(features, labels, 0.7, 0.5)
-    baseline_score = get_baseline_score(LinearRegression, split_data, 'models/regression')
-    all_models = evaluate_all_models()
+    #df = pd.read_csv(Path('AirbnbDataSci/tabular_data/AirBnbData.csv'))
+    #df_2 = td.clean_tabular_data(df)
+    #features, labels = td.load_airbnb(df_2, "Price_Night")  
+    #split_data = split_the_data(features, labels, 0.7, 0.5)
+    #baseline_score = get_baseline_score(LinearRegression, split_data, 'models/regression')
+    #all_models = evaluate_all_models(split_data)
+    best_model = find_best_model()
+    print(best_model)
 
 
 
