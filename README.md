@@ -62,3 +62,30 @@ To prepare the data for addition into the model, a series of tuples containing t
 ### Image data preparation
 To ensure each image was the same size, `resize_images(normalised_height:int, original_image_folder_directory, directory_for_resized_images:str)` was written using the `Pillow` library. This function  loads each image from different subfolders and resizes it to the same height and width, before saving the new version in a new `processed_images` folder. The aspect ratio of the image was calculated and the width was adjusted proportionally to the change in height. In order to characterise the data to identify the smallest height (with which to normalise the other images to) the
 `get_lowest_image_dimensions_from_folder(original_image_folder_directory:str)` function was written. This function returns the lowest width and height of a collection of images in separate subfolders.
+
+## Creating a regression model
+
+Data prepeared previously was used to train the models below. The file `modelling.py` was created to contain the code related to linear regression. 
+
+### Creating a function for splitting data
+
+In order to ensure that model performance is assessed on "unseen" data, the data were first split into 3 data sets; train, validation, split, in proportions of 70:15:15, respectively. The function `split_the_data(features, labels, test_to_rest_ratio, validation_to_test_ratio, random_state)` was written to take the desired ratios of train:test and validation:test ratios (in this example 0.7 and 0.5, respectively), as well as the pseudo-random state of the data shuffling, a feature which is important to remain consistent between models to ensure fair comparisons.  The splitting of data was carried out with the `train_test_split` method from `sklearn`. The function returned split data in 6 lists: 
+`[X_train, y_train, X_validation, y_validation, X_test, y_test]`
+
+### Creating a simple regression model as baseline
+
+As a baseline for comparison, a linear regression model was created. The function `get_baseline_score(regression_model, data_subsets, folder)` was created to take the split data (above) to train the model, and a folder to later output metrics.
+
+### Evaluate the regression model performance
+
+### Implement a custom function to tune the hyperparameters of the model
+
+### Tune the hpperparameters of the modell using methods from SKLearn
+
+### Saving the model
+
+### Beating the baseline regression model
+
+### Comparing the models and finding the best
+
+
