@@ -76,10 +76,6 @@ In order to ensure that model performance is assessed on "unseen" data, the data
 
 As a baseline for comparison, a linear regression model was created. The function `get_baseline_score(regression_model, data_subsets, folder)` was created to take the split data (above) to train the model, and a folder to later output metrics.
 
-### Create a function for multiple iterations of the modelling process and calculate average metrics and most-common parameters
-
-An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. A common approach to gain a better-rounded model is to  is to create multiple subsets of pseudo-random data with which to train the model. In order to carry out this need, the function 
-
 ### Evaluate the regression model performance
 
 ### Implement a custom function to tune the hyperparameters of the model
@@ -87,6 +83,10 @@ An unrepresentative model may be generated when fitting a model to one pseudo-ra
 ### Tune the hpperparameters of the modell using methods from SKLearn
 
 ### Saving the model
+
+### Create a function for multiple iterations of the modelling process and calculate average metrics and most-common parameters
+
+An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. A common approach to gain a better-rounded model is to create multiple subsets of pseudo-random data with which to train the model. In order to carry out this need, the function 
 
 ### Beating the baseline regression model
 
