@@ -78,18 +78,30 @@ As a baseline for comparison, a linear regression model was created. The functio
 
 ### Evaluate the regression model performance
 
-### Implement a custom function to tune the hyperparameters of the model
+In order to evaluate the performance of the model(s) some metrics are needed. To evaluate the performance of a single iteration of the model, the `return_model_perfomance_metrics(y_train, y_train_pred, y_validation, y_validation_pred, y_test, y_test_pred)` was created. This returns a dictionary containing the RMSE, the r2 and the MAE for each of the 3 training sets (train, validation and test), with which to test the performance.
 
-### Tune the hpperparameters of the modell using methods from SKLearn
+ADD GRAPHS HERE 
+
+### Tune the hyperparameters of the model using methods from SKLearn
+
+To ensure that optimal hyperparameters are taken for a model, it is important to tune them first where possible. In order tune the hyperparameters, ideally all of the possible combinations of hyperparameters are tested. `sk learn` provides a means to carry this out in which it is possible to pass hyperparameters with specified ranges to be tested for a given model. 
+
+To decrease the chances of random bias within the training dataset, cv fold was implemented in which pseudorandom subsections of the data are taken for training and a smaller proportion of the data for testing. This process is carried out over the entire dataset to decrease the chance of random bias within a dataset. 
+
+To implement the above, the `tune_regression_model_hyperparameters(model, data_subsets, hyperparameters)` function was written, returning the model as a .joblib file, the best parameters, and the best metrics of the model.
 
 ### Saving the model
 
+The model can be saved using the `save_model(model, hyperparameters, metrics, folder_for_files)` function which saves the returned data described above.
+
 ### Create a function for multiple iterations of the modelling process and calculate average metrics and most-common parameters
 
-An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. A common approach to gain a better-rounded model is to create multiple subsets of pseudo-random data with which to train the model. In order to carry out this need, the function 
+An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. To gain a better-rounded model, multiple subsets of pseudo-random data was generated to train the model multiple time. In order to carry out this need, the function `evaluate_models_multiple_times(num_iter, seed)` was created. 
 
-### Beating the baseline regression model
+Given that the modelling process is carried out over multiple iterations, new functions were required to analyse these data to generate average data and standard deviations for each of the metrics. Furthermore, the most commonly optimal hyperparameters was calculated using the mode value of each hyperparameter. 
 
-### Comparing the models and finding the best
+### Compare linear regression model to other modelling aproaches and finding the best
+
+
 
 
