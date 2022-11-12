@@ -96,12 +96,12 @@ The model can be saved using the `save_model(model, hyperparameters, metrics, fo
 
 ### Create a function for multiple iterations of the modelling process and calculate average metrics and most-common parameters
 
-An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. To gain a better-rounded model, multiple subsets of pseudo-random data was generated to train the model multiple time. In order to carry out this need, the function `evaluate_models_multiple_times(num_iter, seed)` was created. 
+An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. To gain a better-rounded model, multiple subsets of pseudo-random data was generated to train the model multiple time. In order to carry out this need, the function `evaluate_models_multiple_times(num_iter, seed)` was created. The returned metrics for training, validatiojn and test data sets are mean RMSE, RMSE standard deviation, mean r2, mean r2 standard deviation, as well as accuracy of validation and model fits vs the training set (as a % of training set).
 
-Given that the modelling process is carried out over multiple iterations, new functions were required to analyse these data to generate average data and standard deviations for each of the metrics. Furthermore, the most commonly optimal hyperparameters was calculated using the mode value of each hyperparameter. 
+Given that the modelling process is carried out over multiple iterations, a new function `get_aggregate_scores(list_of_dictionaries)` was required to analyse these data to generate average data and standard deviations for each of the metrics. The most commonly optimal hyperparameters were calculated using the mode value of each hyperparameter. 
 
 ### Compare linear regression model to other modelling aproaches and finding the best
 
-
+In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
 
 
