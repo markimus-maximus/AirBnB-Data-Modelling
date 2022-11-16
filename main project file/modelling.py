@@ -88,7 +88,14 @@ def save_model(model, hyperparameters, metrics, folder_for_files):
         json.dump(metrics, outfile)
 
 def split_the_data(features, labels, test_to_rest_ratio, validation_to_test_ratio, random_state):
-    '''Splits data into train:validation:test subsets
+    '''Splits data into train:validation:test subsets.
+    Args:   features: features subset of data as list
+            labels: labels subset of data as list
+            test_to_rest_ratio: the proportion of the data to be taken as the test data set
+            validation_to_test_ratio: what proportion to split the test subset into validation and test
+            random_state: the random state for the data splitting
+    Returns: split data as X_train, y_train, X_validation, y_validation, X_test, y_test
+    
     '''
     #split the data into test and train data; the 0.3 describes the data which is apportioned to the test set 
     X_train, X_test, y_train, y_test = train_test_split(features, labels, test_size=test_to_rest_ratio, random_state=random_state)
@@ -129,7 +136,7 @@ def get_baseline_score(regression_model, data_subsets):
         data_subsets[3], y_validation_pred,
         data_subsets[5], y_test_pred
     )
-    return model, metrics, params
+    return model, params, metrics 
 
 def tune_regression_model_hyperparameters(model, data_subsets, hyperparameters):
     """Tunes the hyperparameters of a regression model and saves the information.
@@ -161,8 +168,10 @@ def tune_regression_model_hyperparameters(model, data_subsets, hyperparameters):
     
 def evaluate_all_models(data_subsets):
     """Tunes the hyperparameters of DecisionTreeRegressor, RandomForestRegressor
-        and XGBRegressor before saving the best model as a .joblib file, and
-        best hyperparameters and performance metrics as .json files.
+        and XGBRegressor.
+        Args: data_subsets: data subsets as list in the form [X_train, y_train, X_validation,
+            y_validation, X_test, y_test].
+        Returns: list of dictionaries containing model, parameters and metrics for all of the mo
     """
     
     decision_tree = tune_regression_model_hyperparameters(
@@ -203,90 +212,100 @@ def evaluate_all_models(data_subsets):
 
 
 def evaluate_models_multiple_times(num_iter, seed):
-        BL_metrics_list_of_dicts = []
-        DT_params_list_of_dicts = []
-        DT_metrics_list_of_dicts = []
-        RF_params_list_of_dicts = []
-        RF_metrics_list_of_dicts = []
-        XG_params_list_of_dicts = []
-        XG_metrics_list_of_dicts = []
+    '''Executes 'evaluate_all_models' method multiple times
+    Args: num_iter: integer for number of times to iterate through the models
+    seed: seed to generate a pseudorandom sequence of numbers between 0 and 99 for the random states of the data splitting
+    Saves all model parameters using the 'save_model' function'''
+    BL_metrics_list_of_dicts = []
+    DT_params_list_of_dicts = []
+    DT_metrics_list_of_dicts = []
+    RF_params_list_of_dicts = []
+    RF_metrics_list_of_dicts = []
+    XG_params_list_of_dicts = []
+    XG_metrics_list_of_dicts = []
 
-        np.random.seed(seed)
-        random_states=  np.random.randint(99, size=num_iter)
+    np.random.seed(seed)
+    random_states=  np.random.randint(99, size=num_iter)
+    
+    df = pd.read_csv(Path('AirbnbDataSci/tabular_data/AirBnbData.csv'))
+    df_2 = td.clean_tabular_data(df)
+    features, labels = td.load_airbnb(df_2, "Price_Night") 
+    #increase training size due to overfitting of more complex models
+    for iteration in random_states: 
+        split_data = split_the_data(features, labels, 0.75, 0.5, random_state=iteration)
         
-        df = pd.read_csv(Path('AirbnbDataSci/tabular_data/AirBnbData.csv'))
-        df_2 = td.clean_tabular_data(df)
-        features, labels = td.load_airbnb(df_2, "Price_Night") 
-        #increase training size due to overfitting of more complex models
-        for iteration in random_states: 
-            split_data = split_the_data(features, labels, 0.75, 0.5, random_state=iteration)
-            
-            BL_metrics, BL_params, BL_model = get_baseline_score(LinearRegression, split_data)
-            BL_metrics_list_of_dicts.append(BL_metrics)
-            models_list = evaluate_all_models(split_data)
-            #print(models_list)
-            DT_model = models_list[0]
-            DT_params_list_of_dicts.append(models_list[1])
-            DT_metrics_list_of_dicts.append(models_list[2])
-            RF_model = models_list[3]
-            RF_params_list_of_dicts.append(models_list[4])
-            RF_metrics_list_of_dicts.append(models_list[5])
-            XG_model = models_list[6]
-            XG_params_list_of_dicts.append(models_list[7])
-            XG_metrics_list_of_dicts.append(models_list[8])
+        BL_model, BL_params, BL_metrics = get_baseline_score(LinearRegression, split_data)
+        BL_metrics_list_of_dicts.append(BL_metrics)
+        models_list = evaluate_all_models(split_data)
+        #print(models_list)
+        DT_model = models_list[0]
+        DT_params_list_of_dicts.append(models_list[1])
+        DT_metrics_list_of_dicts.append(models_list[2])
+        RF_model = models_list[3]
+        RF_params_list_of_dicts.append(models_list[4])
+        RF_metrics_list_of_dicts.append(models_list[5])
+        XG_model = models_list[6]
+        XG_params_list_of_dicts.append(models_list[7])
+        XG_metrics_list_of_dicts.append(models_list[8])
 
 
-        print(f'BL_metrics_list_of_dicts is {BL_metrics_list_of_dicts}')
-        #print(DT_params_list_of_dicts)
-        BL_metrics = get_aggregate_scores(BL_metrics_list_of_dicts)
+    print(f'BL_metrics_list_of_dicts is {BL_metrics_list_of_dicts}')
+    #print(DT_params_list_of_dicts)
+    BL_metrics = get_aggregate_scores(BL_metrics_list_of_dicts)
 
-        save_model(BL_model, BL_params, BL_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\linear_regression"))
-        
-        DT_metrics = get_aggregate_scores(DT_metrics_list_of_dicts)
-        
-        #get the most common parameters of all of the iterations
-        DT_common_params = mode([ sub['max_depth'] for sub in DT_params_list_of_dicts ])
-        DT_common_params = {'max_depth' : DT_common_params}
-        print(DT_common_params)
-        save_model(DT_model, DT_common_params, DT_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\decision_tree_regressor"))
+    save_model(BL_model, BL_params, BL_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\linear_regression"))
+    
+    DT_metrics = get_aggregate_scores(DT_metrics_list_of_dicts)
+    
+    #get the most common parameters of all of the iterations
+    DT_common_params = mode([ sub['max_depth'] for sub in DT_params_list_of_dicts ])
+    DT_common_params = {'max_depth' : DT_common_params}
+    print(DT_common_params)
+    save_model(DT_model, DT_common_params, DT_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\decision_tree_regressor"))
 
-        RF_metrics = get_aggregate_scores(RF_metrics_list_of_dicts)
-        
-        
-        #get the most common parameters of all of the iterations
-        RF_common_n_estimators = mode([ sub['n_estimators'] for sub in RF_params_list_of_dicts ])
-        RF_common_max_depth = mode([ sub['max_depth'] for sub in RF_params_list_of_dicts ])
-        RF_common_bootstrap =mode([ sub['bootstrap'] for sub in RF_params_list_of_dicts ])
-        RF_common_max_samples =mode([ sub['max_samples'] for sub in RF_params_list_of_dicts ])
-        RF_common_params = {'n_estimators': RF_common_n_estimators,
-                            'max_depth' : RF_common_max_depth,
-                            'bootstrap' : RF_common_bootstrap,
-                            'max_samples': RF_common_max_samples}
-        
+    RF_metrics = get_aggregate_scores(RF_metrics_list_of_dicts)
+    
+    
+    #get the most common parameters of all of the iterations
+    RF_common_n_estimators = mode([ sub['n_estimators'] for sub in RF_params_list_of_dicts ])
+    RF_common_max_depth = mode([ sub['max_depth'] for sub in RF_params_list_of_dicts ])
+    RF_common_bootstrap =mode([ sub['bootstrap'] for sub in RF_params_list_of_dicts ])
+    RF_common_max_samples =mode([ sub['max_samples'] for sub in RF_params_list_of_dicts ])
+    RF_common_params = {'n_estimators': RF_common_n_estimators,
+                        'max_depth' : RF_common_max_depth,
+                        'bootstrap' : RF_common_bootstrap,
+                        'max_samples': RF_common_max_samples}
+    
 
-        print(RF_common_params)
-        save_model(RF_model, RF_common_params, RF_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\random_forest_regressor"))
+    print(RF_common_params)
+    save_model(RF_model, RF_common_params, RF_metrics, Path(r"C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\random_forest_regressor"))
 
-        XG_metrics = get_aggregate_scores(XG_metrics_list_of_dicts)
-        
-        #get the most common parameters of all of the iterations
-        XG_common_n_estimators = mode([ sub['n_estimators'] for sub in XG_params_list_of_dicts ])
-        XG_common_max_depth = mode([ sub['max_depth'] for sub in XG_params_list_of_dicts ])
-        XG_common_min_child_weight = mode([ sub['min_child_weight'] for sub in XG_params_list_of_dicts ])
-        XG_common_gamma =mode([ sub['gamma'] for sub in XG_params_list_of_dicts ])
-        XG_common_learning_rate =mode([ sub['learning_rate'] for sub in XG_params_list_of_dicts ])
-        XG_common_params = {'n_estimators' : XG_common_n_estimators,
-                            'max_depth' : XG_common_max_depth,
-                            'min_child_weight' : XG_common_min_child_weight,
-                            'gamma': XG_common_gamma,
-                            'learning_rate': XG_common_learning_rate}
-        
+    XG_metrics = get_aggregate_scores(XG_metrics_list_of_dicts)
+    
+    #get the most common parameters of all of the iterations
+    XG_common_n_estimators = mode([ sub['n_estimators'] for sub in XG_params_list_of_dicts ])
+    XG_common_max_depth = mode([ sub['max_depth'] for sub in XG_params_list_of_dicts ])
+    XG_common_min_child_weight = mode([ sub['min_child_weight'] for sub in XG_params_list_of_dicts ])
+    XG_common_gamma =mode([ sub['gamma'] for sub in XG_params_list_of_dicts ])
+    XG_common_learning_rate =mode([ sub['learning_rate'] for sub in XG_params_list_of_dicts ])
+    XG_common_params = {'n_estimators' : XG_common_n_estimators,
+                        'max_depth' : XG_common_max_depth,
+                        'min_child_weight' : XG_common_min_child_weight,
+                        'gamma': XG_common_gamma,
+                        'learning_rate': XG_common_learning_rate}
+    
 
-        print(XG_common_params)
-        
-        save_model(XG_model, XG_common_params, XG_metrics, Path(r'C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\xgboost_regressor'))
+    print(XG_common_params)
+    
+    save_model(XG_model, XG_common_params, XG_metrics, Path(r'C:\Users\marko\DS Projects\AirBnB-Data-Modelling\main project file\models\regression\xgboost_regressor'))
             
 def get_aggregate_scores(list_of_dictionaries):
+    '''Calculates average scores generated from multiple iterations of a model fit.
+    Args:
+        list_of_dictionaries: List of dictionaries, each of which contain the model metrics from a model fit iteration.
+    Returns:
+        metrics (dict): Training, validation and testing performance metrics including mean RMSE, RMSE standard deviation, mean r2, mean r2 standard deviation, and accuracy of validation and model fits vs the training set.
+    '''
     list_of_train_rmse = [b['train_pred_rmse'] for b in list_of_dictionaries]
 
     train_mean_rmse = np.mean(list_of_train_rmse)
@@ -346,6 +365,7 @@ def get_aggregate_scores(list_of_dictionaries):
 def find_best_model():
     """Searches through the regression_models directory to find the model
         with the smallest RMSE value for the validation set (best model).
+        Args: None
     Returns:
         best_model (class): Loads the model.joblib file.
         best_hyperparameters (dict): Loads the hyperparameters.json file.
@@ -374,9 +394,10 @@ def find_best_model():
 
 
 if __name__ == "__main__":
-    evaluate_models_multiple_times(10, 2)
+    #evaluate_models_multiple_times(10, 2)
     #evaluate_models_multiple_times(5, 0)
-    find_best_model()
+    best_model = find_best_model()
+    print(best_model)
 
 
 
