@@ -74,7 +74,7 @@ In order to ensure that model performance is assessed on "unseen" data, the data
 
 ### Creating a simple regression model as baseline
 
-As a baseline for comparison, a linear regression model was created. The function `get_baseline_score(regression_model, data_subsets, folder)` was created to take the split data (above) to train the model, and a folder to later output metrics.
+The aim of the regression modelling was to predict the price per night with numerical categories as the features. As a baseline for comparison, a linear regression model was created. The function `get_baseline_score(regression_model, data_subsets, folder)` was created to take the split data (above) to train the model, and a folder to later output metrics.
 
 ### Evaluate the regression model performance
 
@@ -96,12 +96,49 @@ The model can be saved using the `save_model(model, hyperparameters, metrics, fo
 
 ### Create a function for multiple iterations of the modelling process and calculate average metrics and most-common parameters
 
-An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. To gain a better-rounded model, multiple subsets of pseudo-random data was generated to train the model multiple time. In order to carry out this need, the function `evaluate_models_multiple_times(num_iter, seed)` was created. The returned metrics for training, validatiojn and test data sets are mean RMSE, RMSE standard deviation, mean r2, mean r2 standard deviation, as well as accuracy of validation and model fits vs the training set (as a % of training set).
+An unrepresentative model may be generated when fitting a model to one pseudo-random subset of data. To gain a better-rounded model, multiple subsets of pseudo-random data was generated to train the model multiple time. In order to carry out this need, the function `evaluate_models_multiple_times(num_iter, seed)` was created. The returned metrics for training, validation and test data sets are mean RMSE, RMSE standard deviation, mean r2, mean r2 standard deviation, as well as accuracy of validation and model fits vs the training set (as a % of training set).
 
 Given that the modelling process is carried out over multiple iterations, a new function `get_aggregate_scores(list_of_dictionaries)` was required to analyse these data to generate average data and standard deviations for each of the metrics. The most commonly optimal hyperparameters were calculated using the mode value of each hyperparameter. 
 
 ### Compare linear regression model to other modelling aproaches and finding the best
 
 In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
+
+A jupyter notebook `graphs.ipynb` was created to create functions to generate graphs with matplotlib. As can be seen in Figure 1, the baseline validation RMS score was 114.51
+
+![image](https://user-images.githubusercontent.com/107410852/202468416-8f4b4133-d9ad-413b-b4f5-87f2cd4a74ac.png)
+
+Figure 1. Baseline scores for data subsets using linear regressor
+
+Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 2.
+
+![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
+Figure 2. Best RMSE values for each of the estimators. labels = mean RMSE score, +/-1 SD
+
+By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 3). 
+
+![image](https://user-images.githubusercontent.com/107410852/202476891-19b91a07-7d2e-4bd3-9c3b-590c753d33b2.png)
+Figure 3. Side-by-side comparison of training and validation dataset RMSE  
+
+To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 4).
+
+![image](https://user-images.githubusercontent.com/107410852/202475735-b1ae1556-f006-49e9-b644-645f949b6e8f.png)
+Figure 4. Generalisation scores of each of the models.
+
+It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 5), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
+
+![image](https://user-images.githubusercontent.com/107410852/202477465-6ce9f0cb-8b6b-4a01-a512-0aa57dc6665a.png)
+Figure 5. Improved generalisation scores after regularisation
+
+![image](https://user-images.githubusercontent.com/107410852/202478466-926a7dff-edc5-432b-b127-87362c461b4f.png)
+Figure 6. RMSE did not consistently improve despite the improved regularistion. 
+
+Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
+
+Overall, given the relatively poor predictive power of any of the estimators used to predict cost per night of AirBnB properties with the data provided, it is tempting to say that factors outside of the features included in the dataset play a significant role in determining the cost per night. Given that in general the location of a property is well known to be able to strongly dictate property prices, it could be that addition of some numerical property location data (perhaps in a grid-like fashion) could serve to improve the regression models.
+
+
+
+
 
 
