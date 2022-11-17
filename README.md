@@ -80,15 +80,21 @@ The aim of the regression modelling was to predict the price per night with nume
 
 In order to evaluate the performance of the model(s) some metrics are needed. To evaluate the performance of a single iteration of the model, the `return_model_perfomance_metrics(y_train, y_train_pred, y_validation, y_validation_pred, y_test, y_test_pred)` was created. This returns a dictionary containing the RMSE, the r2 and the MAE for each of the 3 training sets (train, validation and test), with which to test the performance.
 
-ADD GRAPHS HERE 
+A jupyter notebook `graphs.ipynb` was created to create functions to generate graphs with matplotlib. As can be seen in Figure 1, the baseline validation RMS score was 114.51
+
+![image](https://user-images.githubusercontent.com/107410852/202468416-8f4b4133-d9ad-413b-b4f5-87f2cd4a74ac.png)
+
+Figure 1. Baseline scores for data subsets using linear regressor
 
 ### Tune the hyperparameters of the model using methods from SKLearn
 
-To ensure that optimal hyperparameters are taken for a model, it is important to tune them first where possible. In order tune the hyperparameters, ideally all of the possible combinations of hyperparameters are tested. `sk learn` provides a means to carry this out in which it is possible to pass hyperparameters with specified ranges to be tested for a given model. 
+To ensure that optimal hyperparameters are taken for a model, tuning was implemented before the final model was selected. `sk learn` provides a means to carry this out in which it is possible to pass hyperparameters with specified ranges to be tested for a given model. 
 
 To decrease the chances of random bias within the training dataset, cv fold was implemented in which pseudorandom subsections of the data are taken for training and a smaller proportion of the data for testing. This process is carried out over the entire dataset to decrease the chance of random bias within a dataset. 
 
 To implement the above, the `tune_regression_model_hyperparameters(model, data_subsets, hyperparameters)` function was written, returning the model as a .joblib file, the best parameters, and the best metrics of the model.
+
+A first pass explored a broad range of hyperparameters, before subsequent iterations narrowed the range based on earlier best hyperparameters and provided fewer values per hyperparameter to speed up the process after the slow initial tune. 
 
 ### Saving the model
 
@@ -103,12 +109,6 @@ Given that the modelling process is carried out over multiple iterations, a new 
 ### Compare linear regression model to other modelling aproaches and finding the best
 
 In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
-
-A jupyter notebook `graphs.ipynb` was created to create functions to generate graphs with matplotlib. As can be seen in Figure 1, the baseline validation RMS score was 114.51
-
-![image](https://user-images.githubusercontent.com/107410852/202468416-8f4b4133-d9ad-413b-b4f5-87f2cd4a74ac.png)
-
-Figure 1. Baseline scores for data subsets using linear regressor
 
 Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 2.
 
@@ -136,6 +136,21 @@ Figure 6. RMSE did not consistently improve despite the improved regularistion. 
 Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
 
 Overall, given the relatively poor predictive power of any of the estimators used to predict cost per night of AirBnB properties with the data provided, it is tempting to say that factors outside of the features included in the dataset play a significant role in determining the cost per night. Given that in general the location of a property is well known to be able to strongly dictate property prices, it could be that addition of some numerical property location data (perhaps in a grid-like fashion) could serve to improve the regression models.
+
+## Creating a classification model
+
+### Creating a baseline model
+
+### Evaluating the model performance
+
+### Tuning the hyperparameters of the mdodel and save model, metrics and hyperparameters
+
+### Beating the baseline model and finding the best classification model
+
+### 
+
+
+
 
 
 
