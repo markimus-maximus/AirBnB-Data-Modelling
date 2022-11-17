@@ -113,7 +113,7 @@ Figure 1. Baseline scores for data subsets using linear regressor
 Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 2.
 
 ![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
-Figure 2. Best RMSE values for each of the estimators. labels = mean RMSE score, +/-1 SD
+Figure 2. Best RMSE values for each of the estimators. +/-1 SD
 
 By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 3). 
 
@@ -131,7 +131,7 @@ It was clear that in particular the xgboost estimator was overfitting, which mea
 Figure 5. Improved generalisation scores after regularisation
 
 ![image](https://user-images.githubusercontent.com/107410852/202478466-926a7dff-edc5-432b-b127-87362c461b4f.png)
-Figure 6. RMSE did not consistently improve despite the improved regularistion. 
+Figure 6. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
 
 Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
 
