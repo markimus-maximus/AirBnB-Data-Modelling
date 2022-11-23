@@ -65,7 +65,11 @@ To ensure each image was the same size, `resize_images(normalised_height:int, or
 
 ## Creating a regression model
 
-Data prepeared previously was used to train the models below. The file `modelling.py` was created to contain the code related to linear regression. 
+Data prepared previously was used to train the models below. The file `modelling.py` was created to contain the code related to linear regression. A summary of the continuous data for training/prediction with the regressional models is shown in the table below:
+
+<img width="813" alt="image" src="https://user-images.githubusercontent.com/107410852/203515375-ca042858-1655-45c5-823c-686e0a75c355.png">
+
+Summary of continuous data
 
 ### Creating a function for splitting data
 
@@ -85,6 +89,12 @@ A jupyter notebook `graphs.ipynb` was created to create functions to generate gr
 ![image](https://user-images.githubusercontent.com/107410852/202468416-8f4b4133-d9ad-413b-b4f5-87f2cd4a74ac.png)
 
 Figure 1. Baseline scores for data subsets using linear regressor
+
+By creating a scatter plot it can be visualised that there is quite a lot of variance between the actual (x axis) and predicted (y axis) values using the baseline linear regression approach, particularly at the lower price range (Figure 2).
+
+![image](https://user-images.githubusercontent.com/107410852/203513758-c4faf957-6654-4e1c-9ab4-f7c06a5cb2ef.png)
+
+Figure 2. Actual by predicted plot of initial modelled data
 
 ### Tune the hyperparameters of the model using methods from SKLearn
 
@@ -110,28 +120,28 @@ Given that the modelling process is carried out over multiple iterations, a new 
 
 In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
 
-Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 2.
+Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 3.
 
 ![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
-Figure 2. Best RMSE values for each of the estimators. +/-1 SD
+Figure 3. Best RMSE values for each of the estimators. +/-1 SD
 
-By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 3). 
+By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 4). 
 
 ![image](https://user-images.githubusercontent.com/107410852/202476891-19b91a07-7d2e-4bd3-9c3b-590c753d33b2.png)
-Figure 3. Side-by-side comparison of training and validation dataset RMSE  
+Figure 4. Side-by-side comparison of training and validation dataset RMSE  
 
-To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 4).
+To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 5).
 
 ![image](https://user-images.githubusercontent.com/107410852/202475735-b1ae1556-f006-49e9-b644-645f949b6e8f.png)
-Figure 4. Generalisation scores of each of the models.
+Figure 5. Generalisation scores of each of the models.
 
-It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 5), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
+It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 6), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
 
 ![image](https://user-images.githubusercontent.com/107410852/202477465-6ce9f0cb-8b6b-4a01-a512-0aa57dc6665a.png)
-Figure 5. Improved generalisation scores after regularisation
+Figure 6. Improved generalisation scores after regularisation
 
 ![image](https://user-images.githubusercontent.com/107410852/202478466-926a7dff-edc5-432b-b127-87362c461b4f.png)
-Figure 6. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
+Figure 7. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
 
 Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
 
@@ -139,15 +149,42 @@ Overall, given the relatively poor predictive power of any of the estimators use
 
 ## Creating a classification model
 
-### Creating a baseline model
+In addition to predicting property price per night, a second approach was to predict the category of accommodation of the AirBnB property from a list of 5 options:
+Chalet, Greenhouse, Pool, Offbeat, Beachfront. The training data was the same as for the regressional modelling, except with the inclusion of price-per-night, using the same approach `load_airbnb` as above.
 
-### Evaluating the model performance
+### Creating a baseline model and evaluating performance
 
-### Tuning the hyperparameters of the mdodel and save model, metrics and hyperparameters
+Similarly to the regressional modelling, initially a baseline model was generated. To achieve this the `get_baseline_classification_score(model, data_subsets)` function was written. The results of the baseline model are shown in Figure 1.
+
+![image](https://user-images.githubusercontent.com/107410852/203524123-a99486c0-de2b-44b0-9dac-c5e2fd25af11.png)
+
+Figure 1. Accuracy score from baseline run 
+
+An accuracy of 37 and 40 % from the validation and test sets of data, respectively, was found as the baseline after 1 iteration. 
+
+
+
+### Tuning the hyperparameters of the model and save model, metrics and hyperparameters
+
+Similarly to the regressional modelling, the `save_model(model, hyperparameters, metrics, folder_for_files)` function was written to store all of the necessary information.
 
 ### Beating the baseline model and finding the best classification model
 
-### 
+Hyperparameers were tuned initially and a regularisation applied in order to try to generate a better model. 4 modelling approaches were used: decision tree classifier, logistic regression classifier, random forest classifier and xgboost classifier. A label encorder was used for xgboost since this algorithm does not take strings and needed to be converted into discrete numbers. 
+
+A range of hyperparameters were tested in the first instance for each of the estimators deployed, including different regularisation penalties. After honing in on the best hyperparamters, a series of 20 iterations of the model with different pseudo randomly split data were generated for a robust comparison using the `evaluate_models_multiple_times(num_iter, seed)` function. As with the regressional data, there was overfitting observed from decision tree and xgboost (Figure 2), yet this time it could not be decreased with increased penalties .
+
+![image](https://user-images.githubusercontent.com/107410852/203526258-3b593b30-28b3-44ae-bd95-59c56aa4a71b.png)
+
+Figure 2. Regularisation score shows high overfitting for random forest and xgboost estimators.
+
+Despite the overfitting of xgboost, it was still marginally the best estimator (acc 39 %, Figure 3).
+
+![image](https://user-images.githubusercontent.com/107410852/203526692-4cdd53c8-2a22-4f7c-9485-d4ee490d6e6b.png)
+
+Figure 3. Accuracy scores of validation datasets for all of the estimators used over 20 iterations
+
+It is apparent that as with predicting the continuous property price data, non of the estimators got a particualrly good grasp of factors which dictate which category the property would fall in. This implies that again there are other factors which determine the category of property. Implementation of richer data, for example including location information (perhaps in a numerical gridlike fashion) could help to improve the predictive power of the models. 
 
 
 
