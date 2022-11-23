@@ -184,7 +184,9 @@ Despite the overfitting of xgboost, it was still marginally the best estimator (
 
 Figure 3. Accuracy scores of validation datasets for all of the estimators used over 20 iterations
 
-It is apparent that as with predicting the continuous property price data, non of the estimators got a particualrly good grasp of factors which dictate which category the property would fall in. This implies that again there are other factors which determine the category of property. Implementation of richer data, for example including location information (perhaps in a numerical gridlike fashion) could help to improve the predictive power of the models. 
+It is apparent that as with predicting the continuous property price data, none of the estimators got a particularly good grasp of factors which dictate which category the property would fall in. This implies that, again, there are other factors which determine the category of property. Collection of richer data, for example including location information (perhaps in a numerical gridlike fashion) could help to improve the predictive power of the models. 
+
+
 
 
 
