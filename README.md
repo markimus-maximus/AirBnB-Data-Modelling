@@ -106,7 +106,7 @@ A learning curve was generated to understand how the model performed with increa
 
 ![image](https://user-images.githubusercontent.com/107410852/208474814-ba4a2d1a-05c6-4052-8bb8-5bf96f7b2c5e.png)
 
-Figure 4
+Figure 4. Training curve for linear regressor
 
 ### Tune the hyperparameters of models using methods from SKLearn
 
@@ -143,24 +143,29 @@ In order to compare the outputs of the model, the `find_best_model()` function w
 Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 6.
 
 ![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
+
 Figure 6. Best RMSE values for each of the estimators. +/-1 SD
 
 By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 7). 
 
 ![image](https://user-images.githubusercontent.com/107410852/202476891-19b91a07-7d2e-4bd3-9c3b-590c753d33b2.png)
+
 Figure 7. Side-by-side comparison of training and validation dataset RMSE  
 
 To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 8).
 
 ![image](https://user-images.githubusercontent.com/107410852/202475735-b1ae1556-f006-49e9-b644-645f949b6e8f.png)
+
 Figure 8. Generalisation scores of each of the models.
 
 It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 9), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
 
 ![image](https://user-images.githubusercontent.com/107410852/202477465-6ce9f0cb-8b6b-4a01-a512-0aa57dc6665a.png)
+
 Figure 9. Improved generalisation scores after regularisation
 
 ![image](https://user-images.githubusercontent.com/107410852/202478466-926a7dff-edc5-432b-b127-87362c461b4f.png)
+
 Figure 10. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
 
 Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
