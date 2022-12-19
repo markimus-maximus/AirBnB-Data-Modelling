@@ -120,11 +120,13 @@ To implement the above, the `tune_regression_model_hyperparameters(model, data_s
 
 A first pass explored a broad range of hyperparameters, before subsequent iterations narrowed the range based on earlier best hyperparameters and provided fewer values per hyperparameter to speed up the process after the slow initial tune. 
 
-Inspecting the parameter significance for the two better-performing of the 3 algorithms, it is interesting to not that each algorithm had some similarities and differences (Figure 5). Unlike linear regression which has coefficients, the parameter significance for these algorithms are not weighted negatively and positively, but just positively. The random forest algorithm was most comparable to the baseline model, in that number of guests, beds, bathrooms, value rating and bedrooms were the most impactful on the price of the listing. These parameters are quite intuitive. By contrast, the xgboost algorithm identified that by far, the most important feature to influence price was bedrooms. Bathrooms, number of guests, location rating and value rating all had smaller contributions, while the remaining parameters were completely excluded from the xgboost model. However, despite the large preference of the xgboost algorithm towards number of bedrooms, all of the algorithms including linear regression generally picked out the same features which were contributing to the model.
+After tuning the hyperparameters, they were applied to inspect the parameter significance for the two better-performing of the 3 algorithms. It is interesting to note that each algorithm had some similarities and differences (Figure 5). Unlike linear regression which has coefficients, the parameter significance for these algorithms are not weighted negatively and positively, but just positively. The random forest algorithm was most comparable to the baseline model, in that number of guests, beds, bathrooms, value rating and bedrooms were the most impactful on the price of the listing. These parameters are quite intuitive. By contrast, the xgboost algorithm identified that by far, the most important feature to influence price was bedrooms. Bathrooms, number of guests, location rating and value rating all had smaller contributions, while the remaining parameters were completely excluded from the xgboost model. However, despite the large preference of the xgboost algorithm towards number of bedrooms, all of the algorithms including linear regression generally picked out the same features which were contributing to the model.
 
 ![image](https://user-images.githubusercontent.com/107410852/208478324-8d46e9dd-f750-4a89-9ed7-c2e9c56cbb9b.png)
 
 Figure 5. Comparing parameter significance in random forest and xgboost algorithms
+
+
 
 ### Saving the model
 
@@ -140,11 +142,15 @@ Given that the modelling process is carried out over multiple iterations, a new 
 
 In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
 
-Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 6.
+Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 6, and the actual by predicted for linear regression vs random forest and xgboost are compared. It is clear that, for all of the models, there was a fair amount of variability between the actual and predicted values across all models.
 
 ![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
 
 Figure 6. Best RMSE values for each of the estimators. +/-1 SD
+
+![image](https://user-images.githubusercontent.com/107410852/208490909-d8e91ee3-ce64-4e36-ba25-1368ee0f4607.png)
+
+Figure 7. Actual by predicted plots of different algorithms used
 
 By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 7). 
 
