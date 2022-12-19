@@ -82,7 +82,7 @@ The aim of the regression modelling was to predict the price per night with nume
 
 ### Evaluate the regression model performance
 
-In order to evaluate the performance of the model(s) some metrics are needed. To evaluate the performance of a single iteration of the model, the `return_model_perfomance_metrics(y_train, y_train_pred, y_validation, y_validation_pred, y_test, y_test_pred)` was created. This returns a dictionary containing the RMSE, the r2 and the MAE for each of the 3 training sets (train, validation and test), with which to test the performance.
+To evaluate the performance of the model(s) some metrics are needed. To evaluate the performance of a single iteration of the model, the `return_model_perfomance_metrics(y_train, y_train_pred, y_validation, y_validation_pred, y_test, y_test_pred)` was created. This returns a dictionary containing the RMSE, the r2 and the MAE for each of the 3 training sets (train, validation and test), with which to test the performance.
 
 A jupyter notebook `graphs.ipynb` was created to create functions to generate graphs with matplotlib. As can be seen in Figure 1, the baseline validation RMS score was 114.51
 
@@ -90,13 +90,27 @@ A jupyter notebook `graphs.ipynb` was created to create functions to generate gr
 
 Figure 1. Baseline scores for data subsets using linear regressor
 
-By creating a scatter plot it can be visualised that there is quite a lot of variance between the actual (x axis) and predicted (y axis) values using the baseline linear regression approach, particularly at the lower price range (Figure 2).
+By creating a scatter plot it can be visualised that there is quite a lot of variance between the actual (x axis) and predicted (y axis) values using the baseline linear regression approach, particularly at the lower price range (Figure 2). However, correlation between the 3 datasets (Train, Val, Test) were all remarkably comparable, meaning that the was excellent regularisation. However, since this is a simple regression approach, it is tempting to say that the reason for such comparability is the relatively low capacity of the model.
 
-![image](https://user-images.githubusercontent.com/107410852/203513758-c4faf957-6654-4e1c-9ab4-f7c06a5cb2ef.png)
+![image](https://user-images.githubusercontent.com/107410852/208472435-b3a6db86-8428-4ec1-9e37-4b9943d9d1ef.png)
 
 Figure 2. Actual by predicted plot of initial modelled data
 
-### Tune the hyperparameters of the model using methods from SKLearn
+To gain an idea of which linear regression model features influence the model the most, the `model.coef_` attibute of the `LinearRegression` class was used. There is no singular model parameter with a high weighting, but rather a few which are contributing. Unsurprisingly, number of guests, number of bathrooms and number of bedrooms had a relatively high positive weight when prediciting price. Curiously, however, the value rating had a relatively high negative weighting with respect to price prediction, i.e. a better value rating correlated with a lower price. The communication rating and amenities count had insignificant contributions to the model, while the remianing parameters had intermediate contributions (Figure 3). 
+
+![image](https://user-images.githubusercontent.com/107410852/208470840-8e2f53a3-24fd-4fa0-aa95-e5d37131070f.png)
+
+Figure 3. LinearRegression model coefficient weightings
+
+A learning curve was generated to understand how the model performed with increased datasize. It seemed that the size of the training data were adequate as theere was little convergence of training and test datasets after approx. 250 examples. 
+
+![image](https://user-images.githubusercontent.com/107410852/208474814-ba4a2d1a-05c6-4052-8bb8-5bf96f7b2c5e.png)
+
+Figure 4
+
+### Tune the hyperparameters of models using methods from SKLearn
+
+After generating a baseline, different machine learning algorithms were implemented, namely `DecisionTreeRegressor` `RandomForestRegressor` and `xgboost`.
 
 To ensure that optimal hyperparameters are taken for a model, tuning was implemented before the final model was selected. `sk learn` provides a means to carry this out in which it is possible to pass hyperparameters with specified ranges to be tested for a given model. 
 
@@ -105,6 +119,12 @@ To decrease the chances of random bias within the training dataset, cv fold was 
 To implement the above, the `tune_regression_model_hyperparameters(model, data_subsets, hyperparameters)` function was written, returning the model as a .joblib file, the best parameters, and the best metrics of the model.
 
 A first pass explored a broad range of hyperparameters, before subsequent iterations narrowed the range based on earlier best hyperparameters and provided fewer values per hyperparameter to speed up the process after the slow initial tune. 
+
+Inspecting the parameter significance for the two better-performing of the 3 algorithms, it is interesting to not that each algorithm had some similarities and differences (Figure 5). Unlike linear regression which has coefficients, the parameter significance for these algorithms are not weighted negatively and positively, but just positively. 
+
+![image](https://user-images.githubusercontent.com/107410852/208478324-8d46e9dd-f750-4a89-9ed7-c2e9c56cbb9b.png)
+
+Figure 5. Comparing parameter significance in random forest and xgboost algorithms
 
 ### Saving the model
 
@@ -120,32 +140,32 @@ Given that the modelling process is carried out over multiple iterations, a new 
 
 In order to compare the outputs of the model, the `find_best_model()` function was created to assess the best average RMSE generated from the different models. 
 
-Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 3.
+Using the hyperparameter tuning and multiple iteration functions, the best metrics and hyperparameters were determined. Interestingly, the best RMSE score in the validation subset was linear regression. The RMSE for each of the estimators are shown in Figure 6.
 
 ![image](https://user-images.githubusercontent.com/107410852/202473562-05292fa3-4601-4f59-8e13-3c1bf7a36a93.png)
-Figure 3. Best RMSE values for each of the estimators. +/-1 SD
+Figure 6. Best RMSE values for each of the estimators. +/-1 SD
 
-By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 4). 
+By plotting the training and validation sets next to eachother it was apparent that there was a varying degree of overfitting for all estimators tested (Figure 7). 
 
 ![image](https://user-images.githubusercontent.com/107410852/202476891-19b91a07-7d2e-4bd3-9c3b-590c753d33b2.png)
-Figure 4. Side-by-side comparison of training and validation dataset RMSE  
+Figure 7. Side-by-side comparison of training and validation dataset RMSE  
 
-To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 5).
+To characterise how well the models were able to generalise, the mean RMSEs of the validation subset were taken and a generalisation score was calculated as a percentage (Figure 8).
 
 ![image](https://user-images.githubusercontent.com/107410852/202475735-b1ae1556-f006-49e9-b644-645f949b6e8f.png)
-Figure 5. Generalisation scores of each of the models.
+Figure 8. Generalisation scores of each of the models.
 
-It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 6), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
+It was clear that in particular the xgboost estimator was overfitting, which meant that with some penalising of extreme weightings using `reg_alpha`, it may improve the predictive power of the model. Indeed, the generalisation score did improve considerably to almost identical RMSEs between the training and validation/test sets (Figure 9), as well as a modest improvement in r2 scores for validation/test sets. However, with this improvement came an increase in RMSE of the train data set and no consistent improvement in the validation/test scores. Therefore, despite a good improvement in regularisation, the lack of benefit in RMSE made this approach inconsequential.
 
 ![image](https://user-images.githubusercontent.com/107410852/202477465-6ce9f0cb-8b6b-4a01-a512-0aa57dc6665a.png)
-Figure 6. Improved generalisation scores after regularisation
+Figure 9. Improved generalisation scores after regularisation
 
 ![image](https://user-images.githubusercontent.com/107410852/202478466-926a7dff-edc5-432b-b127-87362c461b4f.png)
-Figure 7. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
+Figure 10. RMSE did not consistently improve despite the improved regularistion. +/-1 SD.
 
 Excluding outliers from the data set (ranging from SD 99.5-99.95) using  `exclude_outliers(split_data, contamination:float)` function did little to improve scores across all of the estimators used. 
 
-Overall, given the relatively poor predictive power of any of the estimators used to predict cost per night of AirBnB properties with the data provided, it is tempting to say that factors outside of the features included in the dataset play a significant role in determining the cost per night. Given that in general the location of a property is well known to be able to strongly dictate property prices, it could be that addition of some numerical property location data (perhaps in a grid-like fashion) could serve to improve the regression models.
+Overall, given the relatively poor predictive power of any of the estimators used to predict cost per night of AirBnB properties with the data provided, it is tempting to say that factors outside of the features included in the dataset play a significant role in determining the cost per night. 
 
 ## Creating a classification model
 
