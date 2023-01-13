@@ -59,7 +59,7 @@ class AirbnbNightlyPriceDataset(Dataset):
     def __len__(self):
         return self.features_all.shape[0]
 
-def split_dataset(dataset, labels, random_state):
+def split_dataset(dataset, labels:str, random_state:int):
     """Splits up the dataset into training, validation and testing datasets
     in the repective ratio of 60:20:20.
     Args:
@@ -79,7 +79,7 @@ def split_dataset(dataset, labels, random_state):
     X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.5, random_state=random_state)
     return (X_train, y_train, X_validation, y_validation, X_test, y_test)
 
-def create_dataloader(X_train, y_train, batch_size):
+def create_dataloader(X_train:tensor, y_train:tensor, batch_size:int):
     """Creates a DataLoader from the training dataset.
     Args:
         X_train (tensor): The tensor containing the training features.
@@ -112,7 +112,7 @@ class LinearRegression(torch.nn.Module):
 
 # model = LinearRegression()
 
-def train_linear_regression(model, num_epochs, dataloader):
+def train_linear_regression(model, num_epochs:int, dataloader):
     """Trains linear model with neural network architecture.
     Args:
         model: a neural nework model instance
@@ -166,7 +166,7 @@ class NN(torch.nn.Module):
     def forward(self, X):
         return self.layers(X)
 
-def get_nn_config(path_to_yaml):
+def get_nn_config(path_to_yaml:str):
     """Retrieves a neural network yaml file
     Args:
         Path to yaml file
@@ -177,7 +177,7 @@ def get_nn_config(path_to_yaml):
         print(yaml_data)
         return yaml_data
 
-def train_nn(model, num_epochs, name_writer, dataloader,  hyperparameter_dict, optimiser):
+def train_nn(model, num_epochs:int, name_writer:str, dataloader,  hyperparameter_dict:dict, optimiser):
     """Trains a feed-forward neural network model
     Args:  
         model: A neural nework model instance
@@ -320,7 +320,7 @@ class CNN(torch.nn.Module):
     def forward(self, X):
         return self.layers(X)
 
-def train_cnn(model, num_epochs, name_writer, dataloader):
+def train_cnn(model, num_epochs:int, name_writer:str, dataloader):
     """Trains a neural network model
     Args:  
         model: A neural nework model instance
@@ -383,7 +383,7 @@ def train_cnn(model, num_epochs, name_writer, dataloader):
     training_metrics = {'training_duration': training_duration, 'loss':training_loss}
     return training_metrics, model_parameters
 
-def save_nn_model(folder_path, model, training_metrics, performance_metrics, all_parameters, hyperparameters):
+def save_nn_model(folder_path:str, model, training_metrics:dict, performance_metrics:dict, all_parameters:dict, hyperparameters:dict):
     """Saves neural network model
     Args:
         folder_path: Path to the folder to contain the model
@@ -430,15 +430,18 @@ def generate_nn_config():
     Returns:
         config_dict (dict): Dictionary containing multiple config dictionaries.
     """
+    #learning rate values
     learning_rate_tests = [1e-4, 1e-5, 1e-6]
+    #hidden dimension arrays
     hidden_dim_array_tests = [
     [2, 1], [4, 1], [6, 1], [8, 1], [16, 1],
      [2, 2], [2, 4], [2, 8], [2, 16], [4, 4], [4, 8]
     ]
-
+    #declaring the choice of optimisers
     optimiser_options= [torch.optim.SGD, torch.optim.Adam]
     config_dict = {}
     counter = 0
+    #generating the dictionary
     for learning_rate in learning_rate_tests:
         for hidden_dim_array in hidden_dim_array_tests:
             for optimiser in optimiser_options:
@@ -450,11 +453,8 @@ def generate_nn_config():
                 counter += 1
     #print(f'config_dict: {config_dict}')
     return config_dict
-    
-def find_best_nn(config_dict):
-    pass
 
-def find_best_nn(data_directory, input_dim, output_dim, name_writer, hyperparameter_dictionary, folder_for_files):
+def find_best_nn(data_directory, input_dim:int, output_dim:int, name_writer:str, hyperparameter_dictionary:dict, folder_for_files:str):
     """Generates several instances of a model and automatically identifies the best neural network based on the model loss
     Args:
         data_directory: Directory for the data to feed into the model 
@@ -477,30 +477,35 @@ def find_best_nn(data_directory, input_dim, output_dim, name_writer, hyperparame
     loss_list = []
 
     best_model = str
-       
+     #iterating though the hyperparameter dictionary by each dictionary of hyperparameters  
     for dictionary in hyperparameter_dictionary.values():
         #print(f'dictionary_looks_like_this: {dictionary}')
         # print(dictionary['hidden_dim_array'])
+        #creating model instance
         model = NN(dictionary['hidden_dim_array'], input_dim, output_dim)
+        #training the model and returning the training metrics and model parameters
         training_metrics, all_parameters = train_nn(model, num_epochs, name_writer, dataloader_train,  dictionary, dictionary['optimiser'])
+        #creating a dataloader for the validation set
         dataloader_val = create_dataloader(X_val, y_val, len(X_val))
+        #evaluating the model's performance with the validation dataset
         evaluation_metrics = evaluate_model(model, dataloader_val, dataloader_test=None)
         print(f'eval_looks_like_this: {evaluation_metrics}')
-        #need to convert from tensor type to np to get the number 
+        #getting the validation loss for this iteration of the model
         loss_this_iteration = np.array(evaluation_metrics['val_loss'])
-
+        #appending loss from this iteration to the whole list of losses
         loss_list.append(loss_this_iteration)
         #saves the current model and returns a path which can be saved
         path = save_nn_model(folder_for_files, model, training_metrics, evaluation_metrics, all_parameters, dictionary)
         print(f'los_list: {loss_list}')
-        if loss_this_iteration > all(loss_list):
+        # checks if the loss of this iteration beats the other iterations
+        if loss_this_iteration < all(loss_list):
             print(f'new_best_model = {path}')
             best_model = path
 
     return best_model
 
 
-def get_num_epochs(n_iters, batch_size, X_train):
+def get_num_epochs(n_iters:int, batch_size:int, X_train):
     """Calculate number of passes through the entire training set.
     Args:
         n_iters (int): The number of batches iterated over.
