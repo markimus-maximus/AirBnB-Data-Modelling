@@ -39,7 +39,10 @@ from torch import tensor
 
 #class to make the data iterable by index, reurning tuple of tensor features, tensor label
 class AirbnbNightlyPriceDataset(Dataset):
-    
+    """Creates a data class to allow a given dataset to be iterable for batch feeding the model.
+    Returns:
+        Indexable dataset with shape
+        """
     def __init__(self, features_all, label_all):
         assert len(features_all) == len(label_all), "Features and labels must be of equal length."
         #initialise parent class
@@ -72,8 +75,8 @@ def split_dataset(dataset, labels, random_state):
     X = torch.tensor(dataset_numerical_only.drop(['Price_Night'], axis=1).values).float()
     print(X.shape)
     y = torch.tensor(dataset_numerical_only[labels].values).float()
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=random_state)
-    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.25, random_state=random_state)
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=random_state)
+    X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.5, random_state=random_state)
     return (X_train, y_train, X_validation, y_validation, X_test, y_test)
 
 def create_dataloader(X_train, y_train, batch_size):
@@ -90,7 +93,12 @@ def create_dataloader(X_train, y_train, batch_size):
     return dataloader
 
 class LinearRegression(torch.nn.Module):
-    
+    """A linear regression model using neural network architecture.
+    Args:
+        num_features: Number of features for training the model
+        batch_size: The size of the batches used to train the model
+    Returns:
+        Neural network architecture to be trained"""
     #initialise the parameters
     def __init__(self, num_features, batch_size):
         super().__init__()
@@ -105,7 +113,12 @@ class LinearRegression(torch.nn.Module):
 # model = LinearRegression()
 
 def train_linear_regression(model, num_epochs, dataloader):
-    
+    """Trains linear model with neural network architecture.
+    Args:
+        model: a neural nework model instance
+        num_epochs: The number of epochs to train the model on
+        dataloader: A dataloader instance for feeding the model
+        """
     #The algorithm for this optimisation step is stochastic gradient descent (since linear regression is used to derive the model). Passing model.parameters and the learning rate lr
     optimiser = torch.optim.SGD(model.parameters(), lr = 0.001)
 
@@ -130,33 +143,53 @@ def train_linear_regression(model, num_epochs, dataloader):
             optimiser.zero_grad()
 
 class NN(torch.nn.Module):
-    def __init__(self, hidden_dim_array, input_dim, output_dim):
+    """A neural network building class.
+    Args: 
+        input_dim: Input dimensions informing the number of nodes 
+        hidden_dim_array: Dimensions of hidden array in a list of 2 integers
+        output_dim: Output dimesnions
+    Returns:
+        Neural network architecture to be trained
+    """
+    def __init__(self, input_dim, hidden_dim_array, output_dim):
         super().__init__()
         self.hidden_dim_array = hidden_dim_array
-
         #define layers
-    
-        
         self.layers = torch.nn.Sequential(
             torch.nn.Linear(input_dim, hidden_dim_array[0]),
             torch.nn.ReLU(),
             torch.nn.Linear(hidden_dim_array[0], hidden_dim_array[1]),
             torch.nn.ReLU(),
             torch.nn.Linear(hidden_dim_array[1], output_dim)
-          
         )
     #define how to stack the different elements of the network together
     def forward(self, X):
         return self.layers(X)
 
 def get_nn_config(path_to_yaml):
+    """Retrieves a neural network yaml file
+    Args:
+        Path to yaml file
+    Returns:
+        yaml data"""
     with open(path_to_yaml) as file:
         yaml_data= yaml.safe_load(file)
         print(yaml_data)
         return yaml_data
 
 def train_nn(model, num_epochs, name_writer, dataloader,  hyperparameter_dict, optimiser):
-
+    """Trains a feed-forward neural network model
+    Args:  
+        model: A neural nework model instance
+        num_epochs: The number of epochs to train the model on (int)
+        name_writer: A name for Tensorboard graph (string)
+        dataloader: A dataloader instance for feeding the model
+        hyperparameter_dict: Dictionary containing hyperparameters (dict)
+        optimiser: Type of optimiser to use
+    Returns:
+        training_metrics: A dictionary containing training_duration and training_loss}
+        model_parameters: A dictionary containing optimiser_parameters, model state dictionary and batch size
+    """
     #The algorithm for this optimisation step is stochastic gradient descent (since linear regression is used to derive the model). Passing model.parameters and the learning rate lr
     optimiser = optimiser(model.parameters(), lr = hyperparameter_dict['learning_rate'])
 
@@ -209,15 +242,21 @@ def train_nn(model, num_epochs, name_writer, dataloader,  hyperparameter_dict, o
     training_metrics = {'training_duration': training_duration, 'loss':training_loss}
     return training_metrics, model_parameters
 
-def evaluate_model(model, val_dataloader, dataloader_test=None):
-
+def evaluate_model(model, dataloader_val, dataloader_test=None):
+    """Evaluates neural network performance
+    Args:
+        model: neural network model instance
+        dataloader_val: Dataloder instance for the validation dataset
+        dataloader_test(optional): Dataloder instance for the test dataset
+    Returns: Dictionary of performance metrics including: validation loss (mse), validation r2, test loss (mse), test r2, mean inference latency(ms)
+        """
     model.eval()
     #we don't need the grad function here so switching it off with no_grad
 
     inference_latencies_list = []
 
     with torch.no_grad():
-        for X, y in val_dataloader:
+        for X, y in dataloader_val:
             #starting the timer for inference latency
             inference_latency_start = time_ns()
             #making the prediction
@@ -261,6 +300,9 @@ def evaluate_model(model, val_dataloader, dataloader_test=None):
 
 
 class CNN(torch.nn.Module):
+    """Generates architecture for convoluted neural network
+    Returns:
+        """
     def __init__(self):
         super().__init__()
         #define layers
@@ -279,6 +321,15 @@ class CNN(torch.nn.Module):
         return self.layers(X)
 
 def train_cnn(model, num_epochs, name_writer, dataloader):
+    """Trains a neural network model
+    Args:  
+        model: A neural nework model instance
+        num_epochs: The number of epochs to train the model on (int)
+        name_writer: A name for Tensorboard graph (string)
+        dataloader: A dataloader instance for feeding the model
+    Returns:
+        training_metrics: A dictionary containing training_duration and training_loss}
+        model_parameters: A dictionary containing optimiser_parameters, model state dictionary and batch size"""
 
     #The algorithm for this optimisation step is stochastic gradient descent (since linear regression is used to derive the model). Passing model.parameters and the learning rate lr
     optimiser = torch.optim.SGD(model.parameters(), lr = 0.001)
@@ -313,24 +364,36 @@ def train_cnn(model, num_epochs, name_writer, dataloader):
             writer.add_scalar(name_writer, training_loss.item(), batch_idx)
             batch_idx += 1
 
-        end_time = time()
+    end_time = time()
     training_duration = end_time - start_time
+    #print(f'time for model training: {training_duration}')
 
-    training_metrics = {'training_duration': training_duration, 'loss':training_loss}
+    optimiser_parameters = optimiser.state_dict()
+    #print(f'optimiser parameters: {optimiser_parameters}')
 
-    optimiser_parameters = {optimiser.state_dict}
-    print(f'optimser parameters: {optimiser_parameters}')
-
-    model_state_dict = {model.state_dict}
-    print(f'model state dict: {model_state_dict}')
+    model_state_dict = model.state_dict()
+    #print(f'model state dict: {model_state_dict}')
 
     batch_size = {'batch_size': len(batch)}
 
-    hyperparameters = optimiser_parameters | model_state_dict | batch_size
+    model_parameters = optimiser_parameters | model_state_dict | batch_size
 
-    return training_metrics, hyperparameters
+    model_parameters = model_parameters.items()
+    
+    training_metrics = {'training_duration': training_duration, 'loss':training_loss}
+    return training_metrics, model_parameters
 
 def save_nn_model(folder_path, model, training_metrics, performance_metrics, all_parameters, hyperparameters):
+    """Saves neural network model
+    Args:
+        folder_path: Path to the folder to contain the model
+        model: Instance of the neural network to be saved
+        performance_metrics: Dictionary of performance metrics
+        all_parameters: Dictionary of model parameters
+        hyperparametrs: Dictionary of all hyperparameters used to train the model
+    Returns: 
+        path_date: The time stamp that the model was saved with
+        """
     today = datetime.now()
     today = today.strftime('\%Y-%m-%d_%H%M%S')
     print(today)
@@ -360,22 +423,12 @@ def save_nn_model(folder_path, model, training_metrics, performance_metrics, all
 
     return path_date
 
-def return_nn_performance_dict(*values):
-    
-    performance_metrics_dict = {}
-    
-    for n in values:
-
-        performance_metrics_dict[str(n)]= n
-
-    return performance_metrics_dict
-
 def generate_nn_config():
-    """Creates multiple configuration dictionaries containing info on 
+    """Creates multiple configuration dictionaries containing hyperparameters for 
     the optimiser, learning rate and depth and width of the hidden
     layers.
     Returns:
-        config_dict (dict): Containing multiple config dictionaries.
+        config_dict (dict): Dictionary containing multiple config dictionaries.
     """
     learning_rate_tests = [1e-4, 1e-5, 1e-6]
     hidden_dim_array_tests = [
@@ -384,9 +437,6 @@ def generate_nn_config():
     ]
 
     optimiser_options= [torch.optim.SGD, torch.optim.Adam]
-
-
-
     config_dict = {}
     counter = 0
     for learning_rate in learning_rate_tests:
@@ -405,14 +455,24 @@ def find_best_nn(config_dict):
     pass
 
 def find_best_nn(data_directory, input_dim, output_dim, name_writer, hyperparameter_dictionary, folder_for_files):
-    
+    """Generates several instances of a model and automatically identifies the best neural network based on the model loss
+    Args:
+        data_directory: Directory for the data to feed into the model 
+        input_dim: Dimensions informing the number of nodes for the input layer
+        output_dim: Dimensions informing the number of nodes for the output layer
+        name_writer: A name for Tensorboard graph (str)
+        hyperparameter_dictionary: Dictionary containing hyperparameters (dict)
+        folder_for_files: Directory for storing all files
+    Returns: 
+        The identity of the best model
+
+        """
     dataset = pd.read_csv(data_directory)
     X_train, y_train, X_val, y_val, X_test, y_test =  split_dataset(dataset, ['Price_Night'], 42)
     
     num_epochs = get_num_epochs(1000, 100, dataset)
 
     dataloader_train = create_dataloader(X_train, y_train, batch_size = 100)
-    
 
     loss_list = []
 
