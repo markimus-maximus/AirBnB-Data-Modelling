@@ -217,6 +217,10 @@ Figure 3. Accuracy scores of validation datasets for all of the estimators used 
 
 It is apparent that as with predicting the continuous property price data, none of the estimators got a particularly good grasp of factors which dictate which category the property would fall in. This implies that, again, there are other factors which determine the category of property. Collection of richer data, for example including location information (perhaps in a numerical gridlike fashion) could help to improve the predictive power of the models. 
 
+## Create a configurable neural network
+
+The `PyTorch` library was used to build and configure neural networks.  
+
 
 
 
