@@ -25,17 +25,22 @@ from torch import tensor
 
 
 
-# def data_prep(path_to_csv):
-#     data = pd.read_csv(path_to_csv)
-#     #git commit 'maindrop non-numerical
-#     features_dropped = data.drop(['Category', 'ID', 'Title','Description','Amenities','Location','url'], axis=1)
-#     #index only the label and covert to tensor of floats
-#     label_all = tensor(features_dropped['Price_Night']).float()
-#     #index features by dropping label and covert to tensor of floats
-#     features_all = tensor(features_dropped.drop('Price_Night', axis=1).values).float()  
-#     number_of_features = features_all.shape[1]
-#     print(f'number of features: {number_of_features}')
-#     return features_all, label_all
+def data_prep(path_to_csv):
+    '''Prepares data for inputting into model
+    Args:
+        path_to_csv: the path to the csv file containing cleaned data
+    Returns:
+        Features and labels'''
+    data = pd.read_csv(path_to_csv)
+    #git commit 'maindrop non-numerical
+    features_dropped = data.drop(['Category', 'ID', 'Title','Description','Amenities','Location','url'], axis=1)
+    #index only the label and covert to tensor of floats
+    label_all = tensor(features_dropped['Price_Night']).float()
+    #index features by dropping label and covert to tensor of floats
+    features_all = tensor(features_dropped.drop('Price_Night', axis=1).values).float()  
+    number_of_features = features_all.shape[1]
+    print(f'number of features: {number_of_features}')
+    return features_all, label_all
 
 #class to make the data iterable by index, reurning tuple of tensor features, tensor label
 class AirbnbNightlyPriceDataset(Dataset):
@@ -51,10 +56,8 @@ class AirbnbNightlyPriceDataset(Dataset):
         self.label_all  = label_all 
     # describes behaviour when the data in the object are indexed
     def __getitem__(self, index):
-        
         #index the features and labels 
         return self.features_all[index], self.label_all[index]        
-
     # describes behaviour when len is called on the object
     def __len__(self):
         return self.features_all.shape[0]
@@ -72,9 +75,9 @@ def split_dataset(dataset, labels:str, random_state:int):
     """
     dataset_numerical_only = dataset.drop(['Category', 'ID', 'Title','Description','Amenities','Location','url'], axis=1).reset_index(drop=True)
     # dataset_numerical_only = dataset_numerical_only.
-    X = torch.tensor(dataset_numerical_only.drop(['Price_Night'], axis=1).values).float()
+    X = torch.FloatTensor(dataset_numerical_only.drop(['Price_Night'], axis=1).values).float()
     print(X.shape)
-    y = torch.tensor(dataset_numerical_only[labels].values).float()
+    y = torch.FloatTensor(dataset_numerical_only[labels].values).float()
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.4, random_state=random_state)
     X_train, X_validation, y_train, y_validation = train_test_split(X_train, y_train, test_size=0.5, random_state=random_state)
     return (X_train, y_train, X_validation, y_validation, X_test, y_test)
@@ -102,15 +105,11 @@ class LinearRegression(torch.nn.Module):
     #initialise the parameters
     def __init__(self, num_features, batch_size):
         super().__init__()
-        
         self.linear_layer = torch.nn.Linear(num_features, batch_size) # passing the batch size and the number of features
-
     #describes behaviour when the class is called, similar to __call__
     def forward(self, features):
         #use the layers to process the features, returning a prediction
         return self.linear_layer(features)
-
-# model = LinearRegression()
 
 def train_linear_regression(model, num_epochs:int, dataloader):
     """Trains linear model with neural network architecture.
@@ -496,12 +495,11 @@ def find_best_nn(data_directory, input_dim:int, output_dim:int, name_writer:str,
         loss_list.append(loss_this_iteration)
         #saves the current model and returns a path which can be saved
         path = save_nn_model(folder_for_files, model, training_metrics, evaluation_metrics, all_parameters, dictionary)
-        print(f'los_list: {loss_list}')
+        print(f'loss_list: {loss_list}')
         # checks if the loss of this iteration beats the other iterations
         if loss_this_iteration < all(loss_list):
             print(f'new_best_model = {path}')
             best_model = path
-
     return best_model
 
 
@@ -534,7 +532,7 @@ if __name__ == '__main__':
     # training_metrics, model_parameters = train_nn(model_bl, num_epochs, 'testing', dataloader_train)
     # dataloader_val = create_dataloader(X_val, y_val, len(X_val))
     # evaluation_metrics = evaluate_model(model_bl, dataloader_val, test_dataloader=None)
-    # #need to convert to string here or json dump incompatible with tensors
+   
     # metrics = str(training_metrics | evaluation_metrics)
     # print(metrics)
     # print(model_parameters)
