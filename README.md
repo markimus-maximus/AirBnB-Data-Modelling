@@ -219,12 +219,56 @@ It is apparent that as with predicting the continuous property price data, none 
 
 ## Create a configurable neural network
 
-The `PyTorch` library was used to build and configure neural networks.  
+The `PyTorch` library was used to build and configure neural networks. Previously cleaned data was used for training the model. An adaptation of the previously coded `split_dataset(dataset, labels:str, random_state:int, list_of_dropped_categories:list)` function was generated, with the additional functionality of converting the features and labels to `tensor` datatypes. 
 
+A dataset class and dataloader were generated. The dataset class allows the data to be iterable by providing len and indexing functionality, returning a tuple of features and label per each index (below). `create_dataloader(X_train:tensor, y_train:tensor, batch_size:int)` was coded to generate a dataloader from the generated dataset class.
 
+~~~
+class AirbnbNightlyPriceDataset(Dataset):
+   def __init__(self, features_all, label_all):
+        assert len(features_all) == len(label_all), "Features and labels must be of equal length."
+        #initialise parent class
+        super().__init__()  
+        self.features_all = features_all 
+        self.label_all  = label_all 
+    # describes behaviour when the data in the object are indexed
+    def __getitem__(self, index):
+        #index the features and labels 
+        return self.features_all[index], self.label_all[index]        
+    # describes behaviour when len is called on the object
+    def __len__(self):
+    return self.features_all.shape[0]
+~~~
 
+The class `NN` was generated to encompass the model architecture. To make the architecture configurable, arguments for input and output dimensions, and a list argument for the hidden array dimensions were included in the class. The general architecture is below. 
 
+~~~
+class NN(torch.nn.Module):
+   def __init__(self, input_dim, hidden_dim_array, output_dim):
+        super().__init__()
+        self.hidden_dim_array = hidden_dim_array
+        #define layers
+        self.layers = torch.nn.Sequential(
+            torch.nn.Linear(input_dim, hidden_dim_array[0]),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim_array[0], hidden_dim_array[1]),
+            torch.nn.ReLU(),
+            torch.nn.Linear(hidden_dim_array[1], output_dim)
+        )
+    #define how to stack the different elements of the network together
+    def forward(self, X):
+        return self.layers(X)
+~~~
 
+The next aim was to create a function for training the model, `train_nn`. looping for a number of epochs, a loop consists of a prediction, a loss calculation, a backpropogation step to update the nodes, and an algorithmic optimisation step. To make this function configurable, arguments for the number of epochs, a dictionary of hyperparamers (containing the learning rate) and the specific optimiser to be used are required arguments. Within the training function is a timer which record the duration of the training loop. This function returns training metrics including the training time and the average training losss from the most recent 30 iterations (to keep the loss representative of where the training finished). Model parameters are also returned from this function.
+
+`evaluate_model` was generated to assess the performance of a trained model with validation dataset and, optionally, the test dataset. The loss, r2 and mean inference latency for the datset(s) are calculated and returned by this function in a dictionary.
+
+`save_nn_model` saves training metrics, performance metrics, model parameters and model hyperparameters in json files named according to the data and time in which the model was completed. To allow for accessory functions to be tallied with the saved data, the function returns the same date time as was used for saving the rest of the data.
+
+`generate_nn_config` allows for the generation of a list of dictionaries, with each dictionary containing a set of unique hyperparameters. Generation of these hyperparameters means that the hyperparameters can be iterated through with the aim of finding the best hyperparameter combination. The function `find_best_nn` takes the list of hyperparameter dictionaries and iterates through them. With these hyperparameters, cycles of data/dataloading generation and model generation, training and evaluating are carried out (according to the classes/functions above), and each model and associated data is saved with `save_nn_model`. The `find_best_nn` model keeps track of every iteration and stores the losses. At the end of all of the cycles, the model with the best loss is saved as best_model which is named the same as when it was tested.
+
+To analyse images, a convoluted network class was generated, along with an associated training function.  
 
 
 
