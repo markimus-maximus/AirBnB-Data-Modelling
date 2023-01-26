@@ -26,7 +26,7 @@ In order to feed the AirBnB data into the model, a number of functions were writ
 
 The tabular data contained the following data categories:
 
-The tabular dataset has the following column:
+The tabular dataset has the following columns (features):
 
 - ID: Unique identifier for the listing
 - Category: The category of the listing
